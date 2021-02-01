@@ -6,6 +6,7 @@ from packaging import version as ver
 import urllib.request
 import tarfile
 import os
+import hashlib
 from subprocess import call
 import time
 
@@ -14,6 +15,18 @@ new_version: str
 download_url = "https://teamspeak.com/en/downloads/"
 dlreq = urllib.request.Request(download_url, headers={'User-Agent': 'Mozilla/5.0'})
 
+# Iteration borrowed from stack overflow, figure out how this things works
+def sha256match(sha256hash: str) -> bool:
+    h = hashlib.sha256()
+    b = bytearray(128*1024)
+    mv = memoryview(b)
+    with open('update.tar.bz2', 'rb', buffering=0) as update_file:
+        for n in iter(lambda:update_file.readinto(mv),0):
+            h.update(mv[:n])
+    if(sha256hash == h.hexdigest()):
+        return True
+    else:
+        return False
 
 
 def get_current_version() -> str:
@@ -52,6 +65,12 @@ def check_for_updates(old_version: str) -> str:
 def download_update(version: str):
     try:
         urllib.request.urlretrieve(f"https://files.teamspeak-services.com/releases/server/{version}/teamspeak3-server_linux_amd64-{version}.tar.bz2", "update.tar.bz2")
+        page = urllib.request.urlopen(dlreq)
+        soup = bs4(page, 'html.parser')
+        css_selector = soup.select_one('#server > div:nth-child(3) > div:nth-child(3) > div:nth-child(1) > div:nth-child(2) > p:nth-child(1)')
+        sha256hash = css_selector.find(text=lambda text: text and text.strip(), recursive=False).strip()
+        if(sha256match(sha256hash[8:]) == False):
+            raise ValueError('The SHA256 sums do not match')
     except:
         print("Couldn't download the update")
         raise
@@ -71,16 +90,18 @@ def install_update():
 def ts3_instance_management(action: str):
     if(action == "start"):
         call("./ts3server_startscript.sh start",cwd="/home/steam/teamspeak3-server_linux_amd64",shell=True)
-    if(action == "stop"):
+    elif(action == "stop"):
         call("./ts3server_startscript.sh stop",cwd="/home/steam/teamspeak3-server_linux_amd64",shell=True)
+    else:
+        print("No action given")
 
 def main():
     while(True):
         old_version = get_current_version()
         new_version = check_for_updates(old_version)
         if(ver.parse(new_version) > ver.parse(old_version)):
-                ts3_instance_management("stop")
                 download_update(new_version)
+                ts3_instance_management("stop")
                 install_update()
                 ts3_instance_management("start")
                 print("Sleeping for a day")
