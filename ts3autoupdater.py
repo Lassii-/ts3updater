@@ -39,20 +39,20 @@ def restore_ts3_from_crash():
 
 
 def main():
-    print("Checking for server updates")
+    print(f"Checking for server updates {datetime.now().time()}")
     update_ts3_if_needed()
     last_checked = datetime.utcnow()
     while(True):
         if (datetime.utcnow() - last_checked) > timedelta(1):
-            print("Checking for server updates")
+            print(f"Checking for server updates {datetime.now().time()}")
             update_ts3_if_needed
             last_checked = datetime.utcnow()
         else:
             print("Skipping server update check")
         print("Checking if server has crashed")
         restore_ts3_from_crash()
-        print("sleeping for 10 minutes")
-        time.sleep(600)
+        print("sleeping for 1 minute")
+        time.sleep(60)
 
 
 if __name__ == '__main__':
