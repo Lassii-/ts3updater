@@ -51,12 +51,13 @@ def check_for_updates(old_version: str, dlreq: urllib.request.Request) -> str:
                                 recursive=False).strip()
     if(ver.parse(version) > ver.parse(old_version)):
         try:
-            with open('version.json', 'r') as version_file:
+            with open('version.json', 'r+') as version_file:
                 data = json.load(version_file)
-            data['version'] = version
-            with open('version.json', 'w') as version_file:
+                data['version'] = version
+                version_file.seek(0)
+                version_file.truncate()
                 json.dump(data, version_file)
-            return version
+                return version
         except:
             print("Something went wrong updating the version.json")
             raise
