@@ -6,6 +6,7 @@ import json
 import urllib.request
 from packaging import version as ver
 import subprocess
+import getpass
 
 
 def sha256match(sha256hash: str) -> bool:
@@ -46,7 +47,8 @@ def check_for_updates(old_version: str, dlreq: urllib.request.Request) -> str:
     soup = bs4(page, 'html.parser')
     css_selector = soup.select_one('#server > div:nth-child(3) > div:nth-child(3) > \
     div:nth-child(1) > h3:nth-child(1) > span:nth-child(1)')
-    version = css_selector.find(text=lambda text: text and text.strip(), recursive=False).strip()
+    version = css_selector.find(text=lambda text: text and text.strip(),
+                                recursive=False).strip()
     if(ver.parse(version) > ver.parse(old_version)):
         try:
             with open('version.json', 'r') as version_file:
@@ -70,11 +72,14 @@ def download_update(version: str, dlreq: urllib.request.Request):
     that the downloaded data matches the hash on the downloads-page
     """
     try:
-        urllib.request.urlretrieve(f"https://files.teamspeak-services.com/releases/server/{version}/teamspeak3-server_linux_amd64-{version}.tar.bz2", "update.tar.bz2")
+        urllib.request.urlretrieve(f"https://files.teamspeak-services.com/releases/server/{version}/teamspeak3-server_linux_amd64-{version}.tar.bz2",
+                                   "update.tar.bz2")
         page = urllib.request.urlopen(dlreq)
         soup = bs4(page, 'html.parser')
-        css_selector = soup.select_one('#server > div:nth-child(3) > div:nth-child(3) > div:nth-child(1) > div:nth-child(2) > p:nth-child(1)')
-        sha256hash = css_selector.find(text=lambda text: text and text.strip(), recursive=False).strip()
+        css_selector = soup.select_one('#server > div:nth-child(3) > div:nth-child(3) >\
+        div:nth-child(1) > div:nth-child(2) > p:nth-child(1)')
+        sha256hash = css_selector.find(text=lambda text: text and text.strip(),
+                                       recursive=False).strip()
         if(sha256match(sha256hash[8:]) is False):
             raise ValueError('The SHA256 sums do not match')
     except:
@@ -104,12 +109,20 @@ def ts3_instance_management(action: str):
             and then returns "Up" or "Down" depending whether
             the TS3 instance has running or not
     """
+    currentUser = getpass.getuser()
     if(action == "start"):
-        subprocess.call("./ts3server_startscript.sh start",cwd="/home/steam/teamspeak3-server_linux_amd64", shell=True)
+        subprocess.call("./ts3server_startscript.sh start",
+                        cwd=f"/home/{currentUser}/teamspeak3-server_linux_amd64",
+                        shell=True)
     elif(action == "stop"):
-        subprocess.call("./ts3server_startscript.sh stop", cwd="/home/steam/teamspeak3-server_linux_amd64", shell=True)
+        subprocess.call("./ts3server_startscript.sh stop",
+                        cwd=f"/home/{currentUser}/teamspeak3-server_linux_amd64",
+                        shell=True)
     elif(action == "status"):
-        status = subprocess.check_output("./ts3server_startscript.sh status", cwd="/home/steam/teamspeak3-server_linux_amd64", shell=True, universal_newlines=True)
+        status = subprocess.check_output("./ts3server_startscript.sh status",
+                                         cwd=f"/home/{currentUser}/teamspeak3-server_linux_amd64",
+                                         shell=True,
+                                         universal_newlines=True)
         if(status == "Server is running\n"):
             return "Up"
         else:
