@@ -49,6 +49,9 @@ class TS3Updater:
         if(ver.parse(version) > ver.parse(self.version)):
             self.version = version
             return self.version
+        else:
+            self.version = self.version
+            return self.version
 
     def download_update(self):
         try:
@@ -102,13 +105,23 @@ class TS3Updater:
             print("No action given")
 
     def update_ts3_if_needed(self):
-        old_version: ver = self.version
-        new_version = self.check_for_updates()
+        self.get_current_version()
+        old_version = self.version
+        new_version: str = self.check_for_updates()
         if(ver.parse(new_version) > ver.parse(old_version)):
-            self.download_update(new_version, self.dl_req)
+            self.download_update()
             self.ts3_instance_management("stop")
-            self.install_update(new_version)
+            self.install_update()
             self.ts3_instance_management("start")
             print("Server updated")
         else:
             print("No update to do")
+
+    def restore_ts3_from_crash(self):
+        status = self.ts3_instance_management("status")
+        if(status == "Up"):
+            print("Server is running normally")
+        elif(status == "Down"):
+            print("Server has crashed, restarting")
+            self.ts3_instance_management("stop")
+            self.ts3_instance_management("start")
