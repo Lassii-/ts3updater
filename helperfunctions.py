@@ -50,17 +50,7 @@ def check_for_updates(old_version: str, dlreq: urllib.request.Request) -> str:
     version = css_selector.find(text=lambda text: text and text.strip(),
                                 recursive=False).strip()
     if(ver.parse(version) > ver.parse(old_version)):
-        try:
-            with open('version.json', 'r+') as version_file:
-                data = json.load(version_file)
-                data['version'] = version
-                version_file.seek(0)
-                version_file.truncate()
-                json.dump(data, version_file)
-                return version
-        except:
-            print("Something went wrong updating the version.json")
-            raise
+        return version
     else:
         return old_version
 
@@ -77,8 +67,8 @@ def download_update(version: str, dlreq: urllib.request.Request):
                                    "update.tar.bz2")
         page = urllib.request.urlopen(dlreq)
         soup = bs4(page, 'html.parser')
-        css_selector = soup.select_one('#server > div:nth-child(3) > div:nth-child(3) >\
-        div:nth-child(1) > div:nth-child(2) > p:nth-child(1)')
+        css_selector = soup.select_one(
+            '#server > div:nth-child(3) > div:nth-child(3) > div:nth-child(1) > div:nth-child(2) > pre:nth-child(1)')
         sha256hash = css_selector.find(text=lambda text: text and text.strip(),
                                        recursive=False).strip()
         if(sha256match(sha256hash[8:]) is False):
@@ -88,13 +78,19 @@ def download_update(version: str, dlreq: urllib.request.Request):
         raise
 
 
-def install_update():
+def install_update(version: str):
     """Installs the update and removes the update-file after that."""
     try:
         update_file = tarfile.open("update.tar.bz2", "r:bz2")
         update_file.extractall()
         update_file.close()
         os.unlink("update.tar.bz2")
+        with open('version.json', 'r+') as version_file:
+            data = json.load(version_file)
+            data['version'] = version
+            version_file.seek(0)
+            version_file.truncate()
+            json.dump(data, version_file)
     except:
         print("Couldn't install the update")
         raise

@@ -5,7 +5,7 @@ from packaging import version as ver
 import time
 from datetime import datetime, timedelta
 from helperfunctions import get_current_version, check_for_updates,\
-     download_update, ts3_instance_management, install_update
+    download_update, ts3_instance_management, install_update
 
 old_version: str
 new_version: str
@@ -20,7 +20,7 @@ def update_ts3_if_needed():
     if(ver.parse(new_version) > ver.parse(old_version)):
         download_update(new_version, dlreq)
         ts3_instance_management("stop")
-        install_update()
+        install_update(new_version)
         ts3_instance_management("start")
         print("Server updated")
     else:
@@ -51,7 +51,7 @@ def main():
             print("Skipping server update check")
         print("Checking if server has crashed")
         restore_ts3_from_crash()
-        print("sleeping for 1 minute")
+        print("Sleeping for 1 minute")
         time.sleep(60)
 
 
