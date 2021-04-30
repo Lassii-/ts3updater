@@ -85,15 +85,18 @@ def install_update(version: str):
         update_file.extractall()
         update_file.close()
         os.unlink("update.tar.bz2")
+    except:
+        print("Couldn't install the update")
+        raise
+    try:
         with open('version.json', 'r+') as version_file:
             data = json.load(version_file)
             data['version'] = version
             version_file.seek(0)
             version_file.truncate()
             json.dump(data, version_file)
-    except:
-        print("Couldn't install the update")
-        raise
+    except IOError:
+        print("Couldn't update version.json!")
 
 
 def ts3_instance_management(action: str):
