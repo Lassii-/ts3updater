@@ -55,14 +55,14 @@ class TS3Updater:
 
     def download_update(self):
         try:
-            urllib.request.urlretrieve(f"https://files.teamspeak-services.com/releases/server/{self.version}/teamspeak3-server_linux_amd64-{self.version}.tar.bz2",
-                                       "update.tar.bz2")
+            urllib.request.urlretrieve(
+                f"https://files.teamspeak-services.com/releases/server/{self.version}/teamspeak3-server_linux_amd64-{self.version}.tar.bz2", "update.tar.bz2")
             page = urllib.request.urlopen(self.dl_req)
             soup = bs4(page, 'html.parser')
             css_selector = soup.select_one(
                 '#server > div:nth-child(3) > div:nth-child(3) > div:nth-child(1) > div:nth-child(2) > pre:nth-child(1)')
-            sha256hash = css_selector.find(text=lambda text: text and text.strip(),
-                                           recursive=False).strip()
+            sha256hash = css_selector.find(
+                text=lambda text: text and text.strip(), recursive=False).strip()
             if(self.sha256match(sha256hash[8:]) is False):
                 raise ValueError('The SHA256 sums do not match')
         except:
@@ -88,12 +88,10 @@ class TS3Updater:
     def ts3_instance_management(self, action):
         if(action == "start"):
             subprocess.call("./ts3server_startscript.sh start",
-                            cwd=f"/home/{self.currentUser}/teamspeak3-server_linux_amd64",
-                            shell=True)
+                            cwd=f"/home/{self.currentUser}/teamspeak3-server_linux_amd64", shell=True)
         elif(action == "stop"):
             subprocess.call("./ts3server_startscript.sh stop",
-                            cwd=f"/home/{self.currentUser}/teamspeak3-server_linux_amd64",
-                            shell=True)
+                            cwd=f"/home/{self.currentUser}/teamspeak3-server_linux_amd64", shell=True)
         elif(action == "status"):
             status = subprocess.check_output(
                 "./ts3server_startscript.sh status", cwd=f"/home/{self.currentUser}/teamspeak3-server_linux_amd64", shell=True, universal_newlines=True)
